@@ -1,0 +1,570 @@
+agents:
+  root:
+    model: developer
+    description: Basic developer
+    instruction: |
+      You are a developer.
+      Stay in the sandbox directory.
+      Do not run tools when it is useless.
+      Respond like smart caveman. Cut all filler, keep technical substance.
+        - Drop articles (a, an, the), filler (just, really, basically, actually).
+        - Drop pleasantries (sure, certainly, happy to).
+        - No hedging. Fragments fine. Short synonyms.
+        - Technical terms stay exact. Code blocks unchanged.
+        - Pattern: [thing] [action] [reason]. [next step].
+    redact_secrets: true
+    max_iterations: 20
+    toolsets:
+      # - type: fetch
+      - type: think
+      # - type: shell
+      #   safer: true
+      - type: filesystem
+        allow_list:
+          - "/work/sandbox/"
+        deny_list:
+          - "/work/config/"
+          - "/work/config/agent.yml"
+          - "/run/"
+
+      # <Model Picker>
+      - type: model_picker
+        models:
+          - developer
+          - debugging
+          - code-review
+          - shell
+      # </Model Picker>
+
+      # <Memory>
+      - type: memory
+        path: ~/.cagent/agent_memory.db
+      # </Memory>
+
+      # <LSPs>
+      # - type: lsp
+      #   command: clangd
+      #   file_types: [".c", ".cpp", ".h", ".hpp"]
+
+      # - type: lsp
+      #   command: rust-analyzer
+      #   file_types: [".rs"]
+
+      # - type: lsp
+      #   command: pylsp
+      #   file_types: [".py"]
+
+      # - type: lsp
+      #   command: typescript-language-server
+      #   args: ["--stdio"]
+      #   file_types: [".ts", ".tsx", ".js", ".jsx"]
+
+      # - type: lsp
+      #   command: gopls
+      #   file_types: [".go"]
+      #   working_dir: ./sandbox
+
+      # - type: lsp
+      #   command: gopls
+      #   version: "golang/tools@v0.21.0"
+      #   file_types: [".go"]
+      # </LSPs>
+
+      # <APIs>
+      # - type: api
+      #   api_config:
+      #     name: get_weather
+      #     method: GET
+      #     endpoint: "https://api.weather.example/v1/current?city=${city}"
+      #     instruction: Get current weather for a city
+      #     args:
+      #       city:
+      #         type: string
+      #         description: City name to get weather for
+      #     required: ["city"]
+      #     headers:
+      #       Authorization: "Bearer ${env.WEATHER_API_KEY}"
+      # </APIs>
+
+permissions:
+  deny:
+    # Privilege Escalation (9)
+    - "shell:cmd=sudo*"
+    - "shell:cmd=su*"
+    - "shell:cmd=chmod*"
+    - "shell:cmd=chown*"
+    - "shell:cmd=chattr*"
+    - "shell:cmd=passwd*"
+    - "shell:cmd=user*"
+    - "shell:cmd=group*"
+    - "shell:cmd=visudo*"
+    - "shell:cmd=gpasswd*"
+    - "shell:cmd=newgrp*"
+
+    # Package Management (20)
+    - "shell:cmd=apt*"
+    - "shell:cmd=apt-get*"
+    - "shell:cmd=apt-cache*"
+    - "shell:cmd=dpkg*"
+    - "shell:cmd=dpkg-reconfigure*"
+    - "shell:cmd=yum*"
+    - "shell:cmd=dnf*"
+    - "shell:cmd=rpm*"
+    - "shell:cmd=pacman*"
+    - "shell:cmd=pacman-key*"
+    - "shell:cmd=makepkg*"
+    - "shell:cmd=emerge*"
+    - "shell:cmd=slackpkg*"
+    - "shell:cmd=zypper*"
+    - "shell:cmd=snap*"
+    - "shell:cmd=flatpak*"
+    - "shell:cmd=brew*"
+    - "shell:cmd=port*"
+    - "shell:cmd=pip*"
+    - "shell:cmd=pip3*"
+    - "shell:cmd=gem*"
+    - "shell:cmd=cargo*"
+    - "shell:cmd=conda*"
+    - "shell:cmd=composer*"
+    - "shell:cmd=bundle*"
+
+    # Go Toolchain (7)
+    - "shell:cmd=go*run*"
+    - "shell:cmd=go*tool*"
+    - "shell:cmd=go*generate*"
+    - "shell:cmd=go*get*"
+    - "shell:cmd=go*install*"
+    - "shell:cmd=go*download*"
+
+    # NPM/Node (9)
+    - "shell:cmd=npm*install*"
+    - "shell:cmd=npm*ci*"
+    - "shell:cmd=npm*add*"
+    - "shell:cmd=npm*exec*"
+    - "shell:cmd=npx*"
+    - "shell:cmd=npm*publish*"
+    - "shell:cmd=npm*link*"
+    - "shell:cmd=npm*run*"
+    - "shell:cmd=npm*config*set*"
+
+    # Destructive File Operations (8)
+    - "shell:cmd=rm*-rf*"
+    - "shell:cmd=rm*-fr*"
+    - "shell:cmd=rm*--recursive*"
+    - "shell:cmd=rm*--force*"
+    - "shell:cmd=shred*"
+    - "shell:cmd=wipe*"
+    - "shell:cmd=srm*"
+    - "shell:cmd=dd*"
+
+    # Filesystem/Storage (25)
+    - "shell:cmd=mkfs*"
+    - "shell:cmd=mkfs.*"
+    - "shell:cmd=fdisk*"
+    - "shell:cmd=cfdisk*"
+    - "shell:cmd=sfdisk*"
+    - "shell:cmd=parted*"
+    - "shell:cmd=partprobe*"
+    - "shell:cmd=mkswap*"
+    - "shell:cmd=swapon*"
+    - "shell:cmd=swapoff*"
+    - "shell:cmd=losetup*"
+    - "shell:cmd=cryptsetup*"
+    - "shell:cmd=fsck*"
+    - "shell:cmd=e2fsck*"
+    - "shell:cmd=tune2fs*"
+    - "shell:cmd=resize2fs*"
+    - "shell:cmd=xfs_*"
+    - "shell:cmd=btrfs*"
+    - "shell:cmd=zfs*"
+    - "shell:cmd=lvm*"
+    - "shell:cmd=pvcreate*"
+    - "shell:cmd=vgcreate*"
+    - "shell:cmd=lvcreate*"
+    - "shell:cmd=hdparm*"
+    - "shell:cmd=blkdiscard*"
+    - "shell:cmd=blockdev*"
+
+    # Process Control (7)
+    - "shell:cmd=kill*"
+    - "shell:cmd=pkill*"
+    - "shell:cmd=killall*"
+    - "shell:cmd=reboot*"
+    - "shell:cmd=shutdown*"
+    - "shell:cmd=poweroff*"
+    - "shell:cmd=halt*"
+    - "shell:cmd=init*"
+    - "shell:cmd=telinit*"
+
+    # Systemd/Services (6)
+    - "shell:cmd=systemctl*"
+    - "shell:cmd=systemd-*"
+    - "shell:cmd=journalctl*"
+    - "shell:cmd=service*"
+    - "shell:cmd=sysctl*"
+    - "shell:cmd=ulimit*"
+    - "shell:cmd=prlimit*"
+
+    # Kernel Modules (6)
+    - "shell:cmd=insmod*"
+    - "shell:cmd=rmmod*"
+    - "shell:cmd=modprobe*"
+    - "shell:cmd=depmod*"
+    - "shell:cmd=modinfo*"
+
+    # Network/Firewall (15)
+    - "shell:cmd=iptables*"
+    - "shell:cmd=ip6tables*"
+    - "shell:cmd=ufw*"
+    - "shell:cmd=firewall-cmd*"
+    - "shell:cmd=firewalld*"
+    - "shell:cmd=nft*"
+    - "shell:cmd=arptables*"
+    - "shell:cmd=ebtables*"
+    - "shell:cmd=ip*link*"
+    - "shell:cmd=ip*addr*"
+    - "shell:cmd=ip*route*"
+    - "shell:cmd=ip*tunnel*"
+    - "shell:cmd=tc*"
+    - "shell:cmd=brctl*"
+    - "shell:cmd=ovs-*"
+    - "shell:cmd=iw*"
+    - "shell:cmd=iwconfig*"
+
+    # Remote Access/Transfer (9)
+    - "shell:cmd=ssh*"
+    - "shell:cmd=sshd*"
+    - "shell:cmd=scp*"
+    - "shell:cmd=sftp*"
+    - "shell:cmd=rsync*"
+    - "shell:cmd=telnet*"
+    - "shell:cmd=rlogin*"
+    - "shell:cmd=rsh*"
+    - "shell:cmd=rexec*"
+    - "shell:cmd=ftp*"
+
+    # Network Clients (5)
+    - "shell:cmd=curl*"
+    - "shell:cmd=wget*"
+    - "shell:cmd=nc*"
+    - "shell:cmd=ncat*"
+    - "shell:cmd=socat*"
+
+    # Containers/Virtualization (13)
+    - "shell:cmd=docker*"
+    - "shell:cmd=podman*"
+    - "shell:cmd=containerd*"
+    - "shell:cmd=nerdctl*"
+    - "shell:cmd=ctr*"
+    - "shell:cmd=runc*"
+    - "shell:cmd=runsc*"
+    - "shell:cmd=kata-*"
+    - "shell:cmd=qemu*"
+    - "shell:cmd=virt-*"
+    - "shell:cmd=vagrant*"
+    - "shell:cmd=Vagrant*"
+    - "shell:cmd=lxc*"
+    - "shell:cmd=lxd*"
+    - "shell:cmd=incus*"
+    - "shell:cmd=rkt*"
+
+    # Shell Builtins/Environment (12)
+    - "shell:cmd=eval*"
+    - "shell:cmd=exec*"
+    - "shell:cmd=source*"
+    - "shell:cmd=alias*"
+    - "shell:cmd=unalias*"
+    - "shell:cmd=declare*"
+    - "shell:cmd=typeset*"
+    - "shell:cmd=export*"
+    - "shell:cmd=set*"
+    - "shell:cmd=unset*"
+    - "shell:cmd=readonly*"
+
+    # SELinux (7)
+    - "shell:cmd=setenforce*"
+    - "shell:cmd=getenforce*"
+    - "shell:cmd=restorecon*"
+    - "shell:cmd=chcon*"
+    - "shell:cmd=semanage*"
+    - "shell:cmd=setsebool*"
+    - "shell:cmd=getsebool*"
+    - "shell:cmd=fixfiles*"
+
+    # Crypto/Keys (5)
+    - "shell:cmd=openssl*"
+    - "shell:cmd=gpg*"
+    - "shell:cmd=gpgsm*"
+    - "shell:cmd=gpg-agent*"
+    - "shell:cmd=gnupg*"
+
+    # Namespace/Isolation (4)
+    - "shell:cmd=chroot*"
+    - "shell:cmd=unshare*"
+    - "shell:cmd=nsenter*"
+    - "shell:cmd=prelink*"
+    - "shell:cmd=preload*"
+
+    # Dynamic Linker (2)
+    - "shell:cmd=ldconfig*"
+    - "shell:cmd=ld.so*"
+
+models:
+  # <Openrouter>
+  openrouter-laguna-xs-2-1:
+    provider: openrouter
+    model: poolside/laguna-xs-2.1:free
+    thinking_budget: 5
+
+  openrouter-north-mini-code:
+    provider: openrouter
+    model: cohere/north-mini-code:free
+    thinking_budget: 5
+
+  openrouter-nemotron-3-5-content-safety:
+    provider: openrouter
+    model: nvidia/nemotron-3.5-content-safety:free
+    thinking_budget: 5
+
+  openrouter-nemotron-3-ultra:
+    provider: openrouter
+    model: nvidia/nemotron-3-ultra-550b-a55b:free
+    thinking_budget: 5
+
+  openrouter-nemotron-3-nano-omni:
+    provider: openrouter
+    model: nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free
+    thinking_budget: 5
+
+  openrouter-laguna-xs-2:
+    provider: openrouter
+    model: poolside/laguna-xs.2:free
+    thinking_budget: 5
+
+  openrouter-laguna-m-1:
+    provider: openrouter
+    model: poolside/laguna-m.1:free
+    thinking_budget: 5
+
+  openrouter-gemma-4-26b:
+    provider: openrouter
+    model: google/gemma-4-26b-a4b-it:free
+    thinking_budget: 5
+
+  openrouter-gemma-4-31b:
+    provider: openrouter
+    model: google/gemma-4-31b-it:free
+    thinking_budget: 5
+
+  openrouter-lyria-3-pro:
+    provider: openrouter
+    model: google/lyria-3-pro-preview
+    thinking_budget: 5
+
+  openrouter-lyria-3-clip:
+    provider: openrouter
+    model: google/lyria-3-clip-preview
+    thinking_budget: 5
+
+  openrouter-nemotron-3-super:
+    provider: openrouter
+    model: nvidia/nemotron-3-super-120b-a12b:free
+    thinking_budget: 5
+
+  openrouter-openrouter-free:
+    provider: openrouter
+    model: openrouter/free
+    thinking_budget: 5
+
+  openrouter-lfm-2-5-thinking:
+    provider: openrouter
+    model: liquid/lfm-2.5-1.2b-thinking:free
+    thinking_budget: 5
+
+  openrouter-lfm-2-5-instruct:
+    provider: openrouter
+    model: liquid/lfm-2.5-1.2b-instruct:free
+    thinking_budget: 5
+
+  openrouter-nemotron-3-nano:
+    provider: openrouter
+    model: nvidia/nemotron-3-nano-30b-a3b:free
+    thinking_budget: 5
+
+  openrouter-nemotron-nano-12b:
+    provider: openrouter
+    model: nvidia/nemotron-nano-12b-v2-vl:free
+    thinking_budget: 5
+
+  openrouter-qwen3-next:
+    provider: openrouter
+    model: qwen/qwen3-next-80b-a3b-instruct:free
+    thinking_budget: 5
+
+  openrouter-nemotron-nano-9b:
+    provider: openrouter
+    model: nvidia/nemotron-nano-9b-v2:free
+    thinking_budget: 5
+
+  openrouter-gpt-oss-120b:
+    provider: openrouter
+    model: openai/gpt-oss-120b:free
+    thinking_budget: 5
+
+  openrouter-gpt-oss-20b:
+    provider: openrouter
+    model: openai/gpt-oss-20b:free
+    thinking_budget: 5
+
+  openrouter-qwen3-coder:
+    provider: openrouter
+    model: qwen/qwen3-coder:free
+    thinking_budget: 5
+
+  openrouter-dolphin-mistral:
+    provider: openrouter
+    model: cognitivecomputations/dolphin-mistral-24b-venice-edition:free
+    thinking_budget: 5
+
+  openrouter-llama-3-3-70b:
+    provider: openrouter
+    model: meta-llama/llama-3.3-70b-instruct:free
+    thinking_budget: 5
+
+  openrouter-llama-3-2-3b:
+    provider: openrouter
+    model: meta-llama/llama-3.2-3b-instruct:free
+    thinking_budget: 5
+
+  openrouter-hermes-3:
+    provider: openrouter
+    model: nousresearch/hermes-3-llama-3.1-405b:free
+    thinking_budget: 5
+  # </Openrouter>
+
+  # <Opencode-Zen>
+  opencode-zen-deepseek-v4-flash-free:
+    provider: opencode-zen
+    model: deepseek-v4-flash-free
+    thinking_budget: 5
+
+  opencode-zen-mimo-v2.5-free:
+    provider: opencode-zen
+    model: mimo-v2.5-free
+    thinking_budget: 5
+
+  opencode-zen-nemotron-3-ultra-free:
+    provider: opencode-zen
+    model: nemotron-3-ultra-free
+    thinking_budget: 5
+
+  opencode-zen-north-mini-code-free:
+    provider: opencode-zen
+    model: north-mini-code-free
+    thinking_budget: 5
+  # </Opencode-Zen>
+
+  # =============================
+  # Model LABELS (categories)
+  # =============================
+
+  # <Developer> — code generation, implementation
+  developer:
+    first_available:
+      - opencode-zen-north-mini-code-free
+      - openrouter-qwen3-coder
+      - openrouter-gpt-oss-20b
+      - openrouter-north-mini-code
+      - openrouter-llama-3-3-70b
+  # </Developer>
+
+  # <Plan> — reasoning, planning, architecture
+  plan:
+    first_available:
+      - opencode-zen-nemotron-3-ultra-free
+      - openrouter-nemotron-3-ultra
+      - openrouter-nemotron-3-super
+      - openrouter-nemotron-3-nano-omni
+      - openrouter-lfm-2-5-thinking
+  # </Plan>
+
+  # <Fast> — low-latency, lightweight
+  fast:
+    first_available:
+      - opencode-zen-deepseek-v4-flash-free
+      - openrouter-lfm-2-5-instruct
+      - openrouter-llama-3-2-3b
+      - openrouter-nemotron-nano-9b
+      - openrouter-laguna-xs-2-1
+  # </Fast>
+
+  # <Creative> — writing, content, brainstorming
+  creative:
+    first_available:
+      - opencode-zen-mimo-v2.5-free
+      - openrouter-hermes-3
+      - openrouter-dolphin-mistral
+      - openrouter-lyria-3-pro
+      - openrouter-llama-3-3-70b
+  # </Creative>
+
+  # <Summarization> — condensing, extracting key info
+  summarization:
+    first_available:
+      - opencode-zen-mimo-v2.5-free
+      - openrouter-hermes-3
+      - openrouter-llama-3-3-70b
+      - openrouter-nemotron-3-ultra
+      - openrouter-gemma-4-31b
+  # </Summarization>
+
+  # <Classification> — categorizing, labeling, routing
+  classification:
+    first_available:
+      - opencode-zen-deepseek-v4-flash-free
+      - openrouter-north-mini-code
+      - openrouter-gpt-oss-20b
+      - openrouter-hermes-3
+      - openrouter-gemma-4-26b
+  # </Classification>
+
+  # <Debugging> — finding and fixing bugs
+  debugging:
+    first_available:
+      - opencode-zen-north-mini-code-free
+      - openrouter-qwen3-coder
+      - openrouter-gpt-oss-20b
+      - openrouter-north-mini-code
+      - openrouter-nemotron-3-nano-omni
+  # </Debugging>
+
+  # <Shell> — CLI commands, terminal output analysis
+  shell:
+    first_available:
+      - opencode-zen-deepseek-v4-flash-free
+      - openrouter-nemotron-3-nano-omni
+      - openrouter-laguna-m-1
+      - openrouter-gemma-4-31b
+      - openrouter-gpt-oss-20b
+  # </Shell>
+
+  # <CodeReview> — PR review, static analysis, best practices
+  code-review:
+    first_available:
+      - opencode-zen-north-mini-code-free
+      - openrouter-qwen3-coder
+      - openrouter-north-mini-code
+      - openrouter-gpt-oss-120b
+      - openrouter-hermes-3
+  # </CodeReview>
+
+  # <Smart> — catch-all, general purpose
+  smart:
+    first_available:
+      - opencode-zen-nemotron-3-ultra-free
+      - openrouter-nemotron-3-ultra
+      - openrouter-hermes-3
+      - openrouter-llama-3-3-70b
+      - openrouter-qwen3-coder
+  # </Smart>
+

@@ -1,0 +1,60 @@
+---
+services:
+  agent-proxy:
+    image: ubuntu/squid:latest
+    container_name: agent-proxy
+    volumes:
+      - ./proxy/squid.conf:/etc/squid/squid.conf:ro
+    networks:
+      - proxy-net
+      - agent-net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.10'
+          memory: 50M
+    restart: unless-stopped
+
+  agent:
+    image: localhost/dockeragent:latest
+    user: 100:101
+    container_name: agent
+    networks:
+      - agent-net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 2G
+    depends_on:
+      - agent-proxy
+    restart: no
+    # env_file: ".env"
+    secrets:
+      - API_KEYS
+    environment:
+      - http_proxy=http://agent-proxy:3128
+      - https_proxy=http://agent-proxy:3128
+      - TELEMETRY_ENABLED=false
+    volumes:
+      - $PWD/sandbox:/work/sandbox
+      - $PWD/config:/work/config/:ro
+      - $PWD/cagent:/home/docker-agent/.cagent
+    tty: true
+    stdin_open: true
+    command: [
+      "run", "--debug",
+      "--env-from-file", "/run/secrets/API_KEYS",
+      "config/agent.yml", "--yolo"
+    ]
+
+networks:
+  agent-net:
+    internal: true
+  proxy-net:
+    driver: bridge
+
+secrets:
+  API_KEYS:
+    file: secrets/api_keys.txt
+

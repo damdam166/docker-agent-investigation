@@ -1,0 +1,9 @@
+docker-agent/
+
+secrets/api_keys.txt
+
+cagent/
+sandbox/
+
+*.log
+.DS_Store
