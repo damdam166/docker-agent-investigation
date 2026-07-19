@@ -1,90 +1,176 @@
 agents:
   root:
-    model: developer
-    description: Basic developer
+    description: Root Agent
+    max_iterations: 20
+    model: plan
+    sub_agents: [browser,coder]
+    # fallback:
+    #   models: [smart]
+    #   retries: 2
+    #   cooldown: 1m
+
+    # welcome_message: "Hello Friend."
+    # add_dates: true
+    # add_environment_info: true
+
+    redact_secrets: true
+    use_toolsets: [model, memory, fs]
+    readonly: false # restrict all toolsets to readonly only.
+
+    # instruction_file: system_prompt__root.txt
     instruction: |
-      You are a developer.
       Stay in the sandbox directory.
-      Do not run tools when it is useless.
       Respond like smart caveman. Cut all filler, keep technical substance.
         - Drop articles (a, an, the), filler (just, really, basically, actually).
         - Drop pleasantries (sure, certainly, happy to).
         - No hedging. Fragments fine. Short synonyms.
         - Technical terms stay exact. Code blocks unchanged.
         - Pattern: [thing] [action] [reason]. [next step].
-    redact_secrets: true
+
+    # session_compaction: true
+    # compaction_threshold: 0.8
+
+    # hooks not implemented yet.
+    # hooks:
+    #   pre_tool_use: [logging]
+    #   # tool_response_transform: [list]
+    #   # post_tool_use: [list]
+    #   # session_start: [list]
+    #   # session_end: [list]
+    #   # on_user_input: [list]
+    #   # stop: [list]
+    #   # notification: [list]
+
+  browser:
+    description: Search on the web
     max_iterations: 20
-    toolsets:
-      # - type: fetch
-      - type: think
-      # - type: shell
-      #   safer: true
-      - type: filesystem
-        allow_list:
-          - "/work/sandbox/"
-        deny_list:
-          - "/work/config/"
-          - "/work/config/agent.yml"
-          - "/run/"
+    model: smart
+    redact_secrets: true
+    use_toolsets: [model, memory, web, docs]
+    readonly: true # restrict all toolsets to readonly only.
+    instruction: |
+      Stay in the sandbox directory.
+      Respond like smart caveman. Cut all filler, keep technical substance.
+        - Drop articles (a, an, the), filler (just, really, basically, actually).
+        - Drop pleasantries (sure, certainly, happy to).
+        - No hedging. Fragments fine. Short synonyms.
+        - Technical terms stay exact. Code blocks unchanged.
+        - Pattern: [thing] [action] [reason]. [next step].
 
-      # <Model Picker>
-      - type: model_picker
-        models:
-          - developer
-          - debugging
-          - code-review
-          - shell
-      # </Model Picker>
+  coder:
+    description: Develop agent
+    max_iterations: 20
+    model: developer
+    redact_secrets: true
+    use_toolsets: [model, memory, fs, lsp_python]
+    instruction: |
+      Stay in the sandbox directory.
+      Respond like smart caveman. Cut all filler, keep technical substance.
+        - Drop articles (a, an, the), filler (just, really, basically, actually).
+        - Drop pleasantries (sure, certainly, happy to).
+        - No hedging. Fragments fine. Short synonyms.
+        - Technical terms stay exact. Code blocks unchanged.
+        - Pattern: [thing] [action] [reason]. [next step].
 
-      # <Memory>
-      - type: memory
-        path: ~/.cagent/agent_memory.db
-      # </Memory>
+commands:
+  logging: "write the date, and the name of the tool you are using into ./logging.txt"
 
-      # <LSPs>
-      # - type: lsp
-      #   command: clangd
-      #   file_types: [".c", ".cpp", ".h", ".hpp"]
+toolsets:
+  fs:
+    type: filesystem
+    allow_list:
+      - "/work/sandbox/"
+    deny_list:
+      - "/work/config/"
+      - "/work/config/agent.yml"
+      - "/run/"
+  # - type: shell
+  #   safer: true
 
-      # - type: lsp
-      #   command: rust-analyzer
-      #   file_types: [".rs"]
+  # <Model Picker>
+  model:
+    type: model_picker
+    models:
+      - developer
+      - debugging
+      - code-review
+      - shell
+  # </Model Picker>
 
-      # - type: lsp
-      #   command: pylsp
-      #   file_types: [".py"]
+  # <Memory>
+  memory:
+    type: memory
+    path: ~/.cagent/agent_memory.db
+  # </Memory>
 
-      # - type: lsp
-      #   command: typescript-language-server
-      #   args: ["--stdio"]
-      #   file_types: [".ts", ".tsx", ".js", ".jsx"]
+  web:
+    type: mcp
+    defer: true
+    ref: docker:duckduckgo
 
-      # - type: lsp
-      #   command: gopls
-      #   file_types: [".go"]
-      #   working_dir: ./sandbox
+  # <LSPs>
+  lsp_clangd:
+    type: lsp
+    defer: true
+    command: clangd
+    file_types: [".c", ".cpp", ".h", ".hpp"]
 
-      # - type: lsp
-      #   command: gopls
-      #   version: "golang/tools@v0.21.0"
-      #   file_types: [".go"]
-      # </LSPs>
+  lsp_rust:
+    type: lsp
+    defer: true
+    command: rust-analyzer
+    file_types: [".rs"]
 
-      # <APIs>
-      # - type: api
-      #   api_config:
-      #     name: get_weather
-      #     method: GET
-      #     endpoint: "https://api.weather.example/v1/current?city=${city}"
-      #     instruction: Get current weather for a city
-      #     args:
-      #       city:
-      #         type: string
-      #         description: City name to get weather for
-      #     required: ["city"]
-      #     headers:
-      #       Authorization: "Bearer ${env.WEATHER_API_KEY}"
-      # </APIs>
+  lsp_python:
+    type: lsp
+    defer: true
+    command: pylsp
+    file_types: [".py"]
+
+  lsp_typescript:
+    type: lsp
+    defer: true
+    command: typescript-language-server
+    args: ["--stdio"]
+    file_types: [".ts", ".tsx", ".js", ".jsx"]
+
+  lsp_golang:
+    type: lsp
+    defer: true
+    command: gopls
+    file_types: [".go"]
+    working_dir: ./sandbox
+
+  lsp_golang2:
+    type: lsp
+    defer: true
+    command: gopls
+    version: "golang/tools@v0.21.0"
+    file_types: [".go"]
+  # </LSPs>
+
+  # <APIs>
+  api:
+    type: api
+    defer: true
+    api_config:
+      name: get_weather
+      method: GET
+      endpoint: "https://api.weather.example/v1/current?city=${city}"
+      instruction: Get current weather for a city
+      args:
+        city:
+          type: string
+          description: City name to get weather for
+      required: ["city"]
+      headers:
+        Authorization: "Bearer ${env.WEATHER_API_KEY}"
+  # </APIs>
+
+  docs:
+    type: fetch
+    allowed_domains:
+      - docker.com
 
 permissions:
   deny:
