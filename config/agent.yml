@@ -3,7 +3,7 @@ agents:
     description: Root Agent
     max_iterations: 20
     model: plan
-    sub_agents: [browser,coder]
+    sub_agents: [browser, coder]
     # fallback:
     #   models: [smart]
     #   retries: 2
@@ -46,7 +46,7 @@ agents:
     max_iterations: 20
     model: smart
     redact_secrets: true
-    use_toolsets: [model, memory, web, docs]
+    use_toolsets: [model, web, fs]
     readonly: true # restrict all toolsets to readonly only.
     instruction: |
       Stay in the sandbox directory.
@@ -104,9 +104,10 @@ toolsets:
   # </Memory>
 
   web:
-    type: mcp
-    defer: true
-    ref: docker:duckduckgo
+    type: fetch
+    # type: mcp
+    # defer: true
+    # ref: docker:duckduckgo
 
   # <LSPs>
   lsp_clangd:
@@ -166,11 +167,6 @@ toolsets:
       headers:
         Authorization: "Bearer ${env.WEATHER_API_KEY}"
   # </APIs>
-
-  docs:
-    type: fetch
-    allowed_domains:
-      - docker.com
 
 permissions:
   deny:
